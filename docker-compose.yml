@@ -13,6 +13,16 @@ services:
     volumes:
       - ./logs/php:/var/log/php
       - ./app:/var/www/html
+
+  node:
+    restart: always
+    build: ./conf/node
+    volumes:
+      - ./logs/node:/var/log/node
+      - ./node:/usr/src/app
+    ports:
+      - '5858:5858'
+
   nginx:
     image: nginx:1.19
     restart: always

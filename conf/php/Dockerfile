@@ -22,3 +22,8 @@ RUN docker-php-ext-install opcache
 ADD php.ini /usr/local/etc/
 
 RUN wget https://getcomposer.org/installer -O - -q | php -- --install-dir=/bin --filename=composer --quiet
+
+RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
+
+USER 1000:1000
+
