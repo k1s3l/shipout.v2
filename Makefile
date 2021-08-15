@@ -21,8 +21,5 @@ php:
 postgres:
 	docker-compose exec postgres /bin/bash
 
-composerInitProject:
-	docker-compose exec php composer create-project symfony/skeleton .
-
-composerUpdate:
+composer-update:
 	docker-compose exec php composer update
