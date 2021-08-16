@@ -1,0 +1,21 @@
+security:
+    firewalls:
+        main:
+            anonymous: ~
+            oauth:
+                resource_owners:
+                    facebook:          "/login/check-facebook"
+                    apple:             "/login/check-apple"
+                    vkontakte:         "/login/check-vkontakte"
+                login_path:        /login
+                use_forward:       false
+                failure_path:      /login
+
+                oauth_user_provider:
+                    orm:
+                        class: App\Entity\Users
+                        properties: [email]
+
+
+    access_control:
+        - { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }

@@ -1,5 +1,10 @@
 #index:
 #    path: /
 #    controller: App\Controller\DefaultController::index
-oauth2:
-  resource: '@TrikoderOAuth2Bundle/Resources/config/routes.xml'
+
+facebook:
+    path: /login/check-facebook
+apple:
+    path: /login/check-apple
+vkontakte:
+    path: /login/check-vkontakte
