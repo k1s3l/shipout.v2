@@ -2,9 +2,7 @@
 #    path: /
 #    controller: App\Controller\DefaultController::index
 
-facebook:
-    path: /login/check-facebook
+google:
+    path: /login/check-google
 apple:
     path: /login/check-apple
-vkontakte:
-    path: /login/check-vkontakte
