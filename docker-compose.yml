@@ -8,15 +8,17 @@ services:
     restart: always
     links:
       - postgres
-    ports:
-      - '9000:9000'
     volumes:
       - ./logs/php:/var/log/php
       - ./app:/var/www/html
+    ports:
+      - '9000:9000'
 
   node:
     restart: always
-    build: ./conf/node
+    build:
+      context: .
+      dockerfile: ./conf/node/Dockerfile
     volumes:
       - ./logs/node:/var/log/node
       - ./node:/usr/src/app

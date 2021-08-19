@@ -1,3 +1,10 @@
 #index:
 #    path: /
 #    controller: App\Controller\DefaultController::index
+
+facebook:
+    path: /login/check-facebook
+apple:
+    path: /login/check-apple
+vkontakte:
+    path: /login/check-vkontakte

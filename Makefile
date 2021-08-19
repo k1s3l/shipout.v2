@@ -1,7 +1,9 @@
-.PHONY: build up down restart test php composerInitProject composerUpdate
+CURRENT_UID := $(shell id -u)
+
+.PHONY: build up down restart test php node postgres composerUpdate
 
 build:
-	docker-compose build
+	docker-compose build --build-arg UID=$(CURRENT_UID)
 
 up:
 	docker-compose up -d
@@ -21,8 +23,8 @@ php:
 postgres:
 	docker-compose exec postgres /bin/bash
 
-composerInitProject:
-	docker-compose exec php composer create-project symfony/skeleton .
+node:
+	docker-compose exec node /bin/bash
 
 composerUpdate:
 	docker-compose exec php composer update
