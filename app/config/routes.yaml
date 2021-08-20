@@ -1,3 +1,8 @@
 #index:
 #    path: /
 #    controller: App\Controller\DefaultController::index
+
+google:
+    path: /login/check-google
+apple:
+    path: /login/check-apple

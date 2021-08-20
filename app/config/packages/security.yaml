@@ -1,0 +1,29 @@
+security:
+    password_hashers:
+        App\Entity\User:
+            algorithm: argon2id
+
+    firewalls:
+        main:
+            anonymous: ~
+            oauth:
+                # Владельцем ресурса является пользователь, входящий через OAuth.
+                # Но в данном случае перечисляются доступные роуты серверов ресурсов, из которых можно аутентифицировать пользователя
+                # (долго втыкал просто)
+                resource_owners:
+                    google:          "/login/check-google"
+                    apple:         "/login/check-apple"
+                login_path:        /login/
+                use_forward:       false
+                failure_path:      /login/
+
+                oauth_user_provider:
+                    orm:
+                        class: App\Entity\User
+                        properties:
+                            google: email
+                            apple: email
+
+
+    access_control:
+        - { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
