@@ -27,8 +27,9 @@ class TokenAuthenticator extends AbstractAuthenticator
     public function authenticate(Request $request): PassportInterface
     {
         $apiToken = $request->headers->get('X-AUTH-TOKEN');
+
         if (!$apiToken) {
-            throw new CustomUserMessageAuthenticationException('Пользователь не аутентифицирован');
+            throw new CustomUserMessageAuthenticationException('roflanebalo');
         }
 
         return new SelfValidatingPassport(new UserBadge($apiToken, function ($apiToken) {
@@ -36,23 +37,25 @@ class TokenAuthenticator extends AbstractAuthenticator
         }));
     }
 
-    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
+    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
     {
         return new JsonResponse([
-            'token' => $exception->getToken(),
             'error' => [
-                $exception->getMessageKey() => $exception->getMessageData(),
+                $exception->getMessageKey(),
             ],
-        ]);
+        ], JsonResponse::HTTP_FORBIDDEN);
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        return new JsonResponse(['data' => 'auth_data']);
+        return null;
     }
 
+    /**
+     * X-AUTH-TOKEN required
+     */
     public function supports(Request $request): ?bool
     {
-        return $request->headers->has('X-AUTH-TOKEN');
+        return true;
     }
 }

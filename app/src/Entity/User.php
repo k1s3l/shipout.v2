@@ -36,7 +36,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @ORM\Column(type="boolean", options={"default":0})
      */
-    private $is_verified;
+    private $is_verified = false;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -61,7 +61,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @ORM\Column(type="boolean", options={"default":0})
      */
-    private $is_deleted;
+    private $is_deleted = false;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -72,6 +72,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @ORM\Column(type="json")
      */
     private $roles = [];
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $api_token;
 
     public function getId(): ?int
     {
@@ -212,6 +217,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRoles(array $roles): self
     {
         $this->roles = $roles;
+
+        return $this;
+    }
+
+    public function getApiToken(): ?string
+    {
+        return $this->api_token;
+    }
+
+    public function setApiToken(?string $api_token): self
+    {
+        $this->api_token = $api_token;
 
         return $this;
     }

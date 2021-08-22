@@ -1,11 +1,23 @@
 security:
+    enable_authenticator_manager: true
+
     password_hashers:
         App\Entity\User:
             algorithm: argon2id
 
+    providers:
+        user_provider:
+            entity:
+                class: App\Entity\User
+                property: api_token
+
     firewalls:
+        api:
+            pattern: ^/api
+            custom_authenticator:
+                - App\Security\TokenAuthenticator
+
         main:
-            anonymous: ~
             oauth:
                 # Владельцем ресурса является пользователь, входящий через OAuth.
                 # Но в данном случае перечисляются доступные роуты серверов ресурсов, из которых можно аутентифицировать пользователя
@@ -26,4 +38,4 @@ security:
 
 
     access_control:
-        - { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/login, roles: PUBLIC_ACCESS }
