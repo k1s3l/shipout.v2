@@ -19,7 +19,7 @@ security:
 
                 oauth_user_provider:
                     orm:
-                        class: App\Entity\Users
+                        class: App\Entity\User
                         properties:
                             google: email
                             apple: email
