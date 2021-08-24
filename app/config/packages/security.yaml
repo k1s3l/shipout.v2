@@ -9,7 +9,7 @@ security:
         user_provider:
             entity:
                 class: App\Entity\User
-                property: api_token
+                property: id
 
     firewalls:
         api:

@@ -2,24 +2,20 @@
 
 namespace App\Controller;
 
+use App\Entity\Tokens;
 use App\Entity\User;
+use App\Repository\TokensRepository;
 use App\Security\TokenAuthenticator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class AuthenticateController extends AbstractController
 {
-    public $tokenAuthenticator;
-
-    public function __construct(TokenAuthenticator $tokenAuthenticator)
-    {
-        $this->tokenAuthenticator = $tokenAuthenticator;
-    }
-
     /**
-     * @Route("/api/users", name="authenticate")
+     * @Route("/api/users", name="users")
      */
     public function index():Response
     {
@@ -42,5 +38,19 @@ class AuthenticateController extends AbstractController
                 'user',
             ],
         ]);
+    }
+
+    /**
+     * @Route(path="/api/session", name="session_destroy", methods={delete})
+     */
+    public function sessionDestroy(Request $request, TokensRepository $tokenRepository)
+    {
+        $tokenRepository->createQueryBuilder('t')
+            ->andWhere('t.token != :token')
+            ->andWhere('t.user_id = :user')
+            ->setParameter('token', $request->headers->get('X-AUTH-TOKEN'))
+            ->setParameter('user', $request->attributes->get('user')->getId())
+            ->delete()
+        ;
     }
 }

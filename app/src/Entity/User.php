@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -74,9 +76,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $roles = [];
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\OneToMany(targetEntity=Tokens::class, mappedBy="user_id", orphanRemoval=true)
      */
-    private $api_token;
+    private $tokens;
+
+    public function __construct()
+    {
+        $this->tokens = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -221,14 +228,32 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getApiToken(): ?string
+    /**
+     * @return Collection|Tokens[]
+     */
+    public function getTokens(): Collection
     {
-        return $this->api_token;
+        return $this->tokens;
     }
 
-    public function setApiToken(?string $api_token): self
+    public function addToken(Tokens $token): self
     {
-        $this->api_token = $api_token;
+        if (!$this->tokens->contains($token)) {
+            $this->tokens[] = $token;
+            $token->setUserId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeToken(Tokens $token): self
+    {
+        if ($this->tokens->removeElement($token)) {
+            // set the owning side to null (unless already changed)
+            if ($token->getUserId() === $this) {
+                $token->setUserId(null);
+            }
+        }
 
         return $this;
     }
