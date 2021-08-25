@@ -17,7 +17,7 @@ class AuthenticateController extends AbstractController
     /**
      * @Route("/api/users", name="users")
      */
-    public function index():Response
+    public function index(Request $request):Response
     {
         $users = $this->getDoctrine()
             ->getRepository(User::class)
@@ -31,26 +31,36 @@ class AuthenticateController extends AbstractController
          * @TODO Добавить сериалайзер
          */
 
+        $user = $request->attributes->get('user');
+
         return new JsonResponse([
-            'users' => [
-                'user',
-                'user',
-                'user',
+            'username' => $user->getUsername(),
+            'payload' => [
+                'id' => $user->getId(),
+                'email' => $user->getEmail(),
+                'full_name' => $user->getFullName(),
             ],
         ]);
     }
 
     /**
-     * @Route(path="/api/session", name="session_destroy", methods={delete})
+     * @Route(path="/api/session", name="session_destroy", methods={"delete"})
+     * Destroy all session except current
      */
-    public function sessionDestroy(Request $request, TokensRepository $tokenRepository)
+    public function destroy(Request $request, TokensRepository $tokenRepository)
     {
-        $tokenRepository->createQueryBuilder('t')
-            ->andWhere('t.token != :token')
-            ->andWhere('t.user_id = :user')
+        $query = $tokenRepository->createQueryBuilder('t')
+            ->delete()
+            ->andwhere('t.token != :token')
+            ->andwhere('t.user = :user')
             ->setParameter('token', $request->headers->get('X-AUTH-TOKEN'))
             ->setParameter('user', $request->attributes->get('user')->getId())
-            ->delete()
         ;
+        $result = $query->getQuery()->getResult();
+
+        return new JsonResponse([
+            'success' => true,
+            'count' => $result,
+        ]);
     }
 }

@@ -162,6 +162,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getFullName(): ?string
+    {
+        $fullName = array_filter([
+            $this->first_name,
+            $this->last_name,
+            $this->middle_name,
+        ]);
+
+        return implode(' ', $fullName);
+    }
+
     public function getDateOfBirth(): ?\DateTimeInterface
     {
         return $this->date_of_birth;
