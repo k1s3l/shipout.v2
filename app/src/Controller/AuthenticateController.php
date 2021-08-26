@@ -11,36 +11,34 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 
 class AuthenticateController extends AbstractController
 {
     /**
-     * @Route("/api/users", name="users")
+     * @Route("/api/user", name="user")
      */
     public function index(Request $request):Response
     {
-        $users = $this->getDoctrine()
-            ->getRepository(User::class)
-            ->findBy(
-                ['is_verified' => true],
-                ['id' => 'DESC'],
-                10
-            );
-
-        /**
-         * @TODO Добавить сериалайзер
-         */
-
         $user = $request->attributes->get('user');
 
-        return new JsonResponse([
-            'username' => $user->getUsername(),
-            'payload' => [
-                'id' => $user->getId(),
-                'email' => $user->getEmail(),
-                'full_name' => $user->getFullName(),
-            ],
-        ]);
+        $defaultContext = [
+            AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => fn ($object, $format, $context) => $object->getId(),
+        ];
+        $normalizer = new ObjectNormalizer(
+            null, null,
+            null, null,
+            null, null,
+            $defaultContext
+        );
+
+        $serializer = new Serializer([$normalizer], [new JsonEncoder()]);
+        $json = $serializer->serialize($user, 'json');
+
+        return JsonResponse::fromJsonString($json);
     }
 
     /**
