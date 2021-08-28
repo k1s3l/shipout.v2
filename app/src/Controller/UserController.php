@@ -2,21 +2,20 @@
 
 namespace App\Controller;
 
-use App\Entity\Tokens;
 use App\Entity\User;
 use App\Repository\TokensRepository;
-use App\Security\TokenAuthenticator;
+use App\Serializer\Normalizer\UserNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class AuthenticateController extends AbstractController
+class UserController extends AbstractController
 {
     /**
      * @Route("/api/user", name="user")
@@ -25,17 +24,7 @@ class AuthenticateController extends AbstractController
     {
         $user = $request->attributes->get('user');
 
-        $defaultContext = [
-            AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => fn ($object, $format, $context) => $object->getId(),
-        ];
-        $normalizer = new ObjectNormalizer(
-            null, null,
-            null, null,
-            null, null,
-            $defaultContext
-        );
-
-        $serializer = new Serializer([$normalizer], [new JsonEncoder()]);
+        $serializer = new Serializer([new DateTimeNormalizer(), new UserNormalizer()], [new JsonEncoder()]);
         $json = $serializer->serialize($user, 'json');
 
         return JsonResponse::fromJsonString($json);
@@ -60,5 +49,43 @@ class AuthenticateController extends AbstractController
             'success' => true,
             'count' => $result,
         ]);
+    }
+
+    /**
+     * @Route(path="/api/sign_up",name="sign_up",methods={"post"})
+     */
+    public function signUp(Request $request, ValidatorInterface $validator)
+    {
+        $data = $request->toArray();
+        $errors = $validator->validate((new User())->setPassword($data['password']));
+        $errorMsg = [];
+
+        for ($i = 0; ; $i++) {
+            if ($errors->has($i)) {
+                $error = $errors->get($i);
+                $errorMsg['errors'][$error->getPropertyPath()] = $error->getMessage();
+                continue;
+            }
+            break;
+        }
+
+        return new JsonResponse($errorMsg);
+    }
+
+
+    /**
+     * @Route(path="/api/sign_in",name="sign_in",methods={"post"})
+     */
+    public function signIn(Request $request)
+    {
+        return new JsonResponse(['message' => 'string']);
+    }
+
+    /**
+     * @Route(path="/api/confirm",name="confirm_code",methods={"patch"})
+     */
+    public function confirm(Request $request)
+    {
+        return new JsonResponse(['message' => 'string']);
     }
 }

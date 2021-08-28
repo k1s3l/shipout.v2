@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\HasLifecycleCallbacks()
@@ -66,6 +67,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $is_deleted = false;
 
     /**
+     * @Assert\NotBlank(message="Обязательное значение")
+     * @Assert\Length(min=8, max=64, minMessage="Минимальная длина пароля 8 символов", maxMessage="Превышена максимальная длина пароля в 64 символа")
      * @ORM\Column(type="string", length=255)
      */
     private $password;
