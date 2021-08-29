@@ -68,7 +68,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * @Assert\NotBlank(message="Обязательное значение")
-     * @Assert\Length(min=8, max=64, minMessage="Минимальная длина пароля 8 символов", maxMessage="Превышена максимальная длина пароля в 64 символа")
+     * @Assert\Length(
+     *     min=8,
+     *     max=64,
+     *     minMessage="Минимальная длина пароля 8 символов",
+     *     maxMessage="Превышена максимальная длина пароля в 64 символа"
+     * )
+     * @Assert\Regex(
+     *     pattern="/[A-ZА-Я]+/",
+     *     message="Пароль должен содержать хотя бы одну прописную букву"
+     * )
+     * @Assert\Regex(
+     *     pattern="/[a-zа-я]+/",
+     *     message="Пароль должен содержать хотя бы одну строчную букву"
+     * )
+     * @Assert\Regex(
+     *     pattern="/[0-9]+/",
+     *     message="Пароль должен содержать хотя бы одну цифру"
+     * )
      * @ORM\Column(type="string", length=255)
      */
     private $password;

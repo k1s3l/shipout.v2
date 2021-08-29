@@ -63,7 +63,7 @@ class UserController extends AbstractController
         for ($i = 0; ; $i++) {
             if ($errors->has($i)) {
                 $error = $errors->get($i);
-                $errorMsg['errors'][$error->getPropertyPath()] = $error->getMessage();
+                $errorMsg['errors'][$error->getPropertyPath()][] = $error->getMessage();
                 continue;
             }
             break;
