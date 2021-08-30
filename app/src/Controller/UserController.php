@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Repository\TokensRepository;
 use App\Serializer\Normalizer\UserNormalizer;
+use App\Services\ErrorService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,6 +18,14 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserController extends AbstractController
 {
+    public $errorService;
+
+    public function __construct(ErrorService $errorService, ValidatorInterface $validator)
+    {
+        $this->errorService = $errorService;
+        $this->validator = $validator;
+    }
+
     /**
      * @Route("/api/user", name="user")
      */
@@ -54,22 +63,16 @@ class UserController extends AbstractController
     /**
      * @Route(path="/api/sign_up",name="sign_up",methods={"post"})
      */
-    public function signUp(Request $request, ValidatorInterface $validator)
+    public function signUp(Request $request)
     {
         $data = $request->toArray();
-        $errors = $validator->validate((new User())->setPassword($data['password']));
-        $errorMsg = [];
+        $user = (new User())
+            ->setPassword($data['password'])
+            ->setUsername($data['username'])
+        ;
+        $errorMsg = $this->errorService->getMessages($user, $this->validator);
 
-        for ($i = 0; ; $i++) {
-            if ($errors->has($i)) {
-                $error = $errors->get($i);
-                $errorMsg['errors'][$error->getPropertyPath()][] = $error->getMessage();
-                continue;
-            }
-            break;
-        }
-
-        return new JsonResponse($errorMsg);
+        return new JsonResponse($errorMsg ?? $data, $errorMsg ? 400 : 200);
     }
 
 

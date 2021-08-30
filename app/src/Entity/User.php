@@ -27,6 +27,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $id;
 
     /**
+     * @Assert\Length(
+     *     min=5,
+     *     max=12,
+     *     minMessage="Минимальная длина никнейма 5 символов",
+     *     maxMessage="Максимльная длина никнейма 12 символов"
+     * )
      * @ORM\Column(type="string", length=255)
      */
     private $username;
