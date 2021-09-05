@@ -9,7 +9,7 @@ security:
         user_provider:
             entity:
                 class: App\Entity\User
-                property: id
+                property: email
 
     firewalls:
         api:
@@ -18,6 +18,11 @@ security:
                 - App\Security\TokenAuthenticator
 
         main:
+            json_login:
+                check_path: sign_in
+                username_path: email
+                password_path: password
+
             oauth:
                 # Владельцем ресурса является пользователь, входящий через OAuth.
                 # Но в данном случае перечисляются доступные роуты серверов ресурсов, из которых можно аутентифицировать пользователя

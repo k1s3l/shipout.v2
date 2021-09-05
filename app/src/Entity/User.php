@@ -6,6 +6,7 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -13,6 +14,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * @ORM\HasLifecycleCallbacks()
  * @ORM\Entity(repositoryClass=UserRepository::class)
+ * @UniqueEntity(
+ *     "username",
+ *     message="Значения {{ value }} должно быть уникальным"
+ * )
+ * @UniqueEntity(
+ *     "email",
+ *     message="Значения {{ value }} должно быть уникальным"
+ * )
  * @ORM\Table(name="`user`")
  */
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -27,6 +36,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $id;
 
     /**
+     * @Assert\Regex(
+     *     pattern="/^[A-Za-z0-9_-]+$/",
+     *     message="Значение невалидно. Разрешенные диапазоны символов [A-Z], [a-z], [0-9], [_-]"
+     * )
      * @Assert\Length(
      *     min=5,
      *     max=12,
@@ -38,6 +51,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $username;
 
     /**
+     * @Assert\NotBlank(message="Обязательное значение")
+     * @Assert\Email(
+     *     message = "{{ value }} имеет невалидный формат",
+     * )
      * @ORM\Column(type="string", length=255)
      */
     private $email;
@@ -63,9 +80,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $middle_name;
 
     /**
+     * @Assert\NotBlank(message="Заполните значение даты")
+     * @Assert\Expression(
+     *     "this.getDateOfBirth().getTimestamp() <= this.getAllowableDate().getTimestamp()",
+     *      message="Регистрация в сервисе доступна с 16 лет"
+     * )
      * @ORM\Column(type="date")
      */
-    private $date_of_birth;
+    private ?\DateTimeInterface $date_of_birth;
 
     /**
      * @ORM\Column(type="boolean", options={"default":0})
@@ -293,5 +315,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return $this;
+    }
+
+    public function getAllowableDate(): \DateTimeImmutable
+    {
+        return (new \DateTimeImmutable())->modify('-16 years');
     }
 }
