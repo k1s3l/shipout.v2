@@ -36,6 +36,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $id;
 
     /**
+     * @Assert\NotBlank(message="Обязательное значение")
      * @Assert\Regex(
      *     pattern="/^[A-Za-z0-9_-]+$/",
      *     message="Значение невалидно. Разрешенные диапазоны символов [A-Z], [a-z], [0-9], [_-]"
@@ -80,11 +81,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $middle_name;
 
     /**
-     * @Assert\NotBlank(message="Заполните значение даты")
-     * @Assert\Expression(
-     *     "this.getDateOfBirth().getTimestamp() <= this.getAllowableDate().getTimestamp()",
-     *      message="Регистрация в сервисе доступна с 16 лет"
-     * )
+     * @Assert\NotBlank(message="Обязательное значение")
+     * @Assert\LessThanOrEqual("-16 years", message="Регистрация доступна от 16 лет")
      * @ORM\Column(type="date")
      */
     private ?\DateTimeInterface $date_of_birth;
@@ -315,10 +313,5 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return $this;
-    }
-
-    public function getAllowableDate(): \DateTimeImmutable
-    {
-        return (new \DateTimeImmutable())->modify('-16 years');
     }
 }

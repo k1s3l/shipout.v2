@@ -16,8 +16,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
@@ -30,12 +32,14 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserController extends AbstractController
 {
+    public $passwordHasher;
     public $errorService;
 
-    public function __construct(ErrorService $errorService, ValidatorInterface $validator)
+    public function __construct(ErrorService $errorService, ValidatorInterface $validator, UserPasswordHasherInterface $passwordHasher)
     {
         $this->errorService = $errorService;
         $this->validator = $validator;
+        $this->passwordHasher = $passwordHasher;
     }
 
     /**
@@ -75,7 +79,7 @@ class UserController extends AbstractController
     /**
      * @Route(path="/api/sign_up",name="sign_up",methods={"post"})
      */
-    public function signUp(Request $request, ValidatorInterface $validator)
+    public function signUp(Request $request)
     {
         $user = new User();
 
@@ -98,20 +102,22 @@ class UserController extends AbstractController
             ]
         );
 
-        // @TODO Добавить вызов passwordHashers перед сохранением пароля
         $serializer->deserialize($request->getContent(), User::class, 'json', [
             DateTimeNormalizer::FORMAT_KEY => 'Y-m-d',
             AbstractNormalizer::OBJECT_TO_POPULATE => $user,
         ]);
 
-        $errors = $this->errorService->getMessages($user, $validator);
+        $errors = $this->errorService->getMessages($user, $this->validator);
 
         if (!$errors) {
             $em = $this->getDoctrine()->getManager();
+            $user->setPassword($this->passwordHasher->hashPassword($user, $user->getPassword()));
             $em->persist($user);
             $em->flush();
 
-            return new JsonResponse(['id' => $user->getId()]);
+            $json = $serializer->serialize($user, 'json');
+
+            return JsonResponse::fromJsonString($json);
         }
 
         return new JsonResponse($errors);
@@ -132,16 +138,49 @@ class UserController extends AbstractController
         ];
         $jwt = JWT::encode($payload, 'HS256');
 
-        $token = (new Tokens())
+        $serializer = new Serializer(
+            [
+                new DateTimeNormalizer([
+                    DateTimeNormalizer::FORMAT_KEY => 'Y-m-d',
+                ]),
+                new ObjectNormalizer(
+                    null,
+                    null,
+                    null,
+                    new ReflectionExtractor(),
+                ),
+                new GetSetMethodNormalizer(),
+                new ArrayDenormalizer(),
+            ],
+            [
+                new JsonEncoder(),
+            ]
+        );
+
+        $token = new Tokens();
+        $serializer->deserialize($request->getContent(), Tokens::class, 'json', [
+            DateTimeNormalizer::FORMAT_KEY => 'Y-m-d H:i:s',
+            AbstractNormalizer::OBJECT_TO_POPULATE => $token,
+            AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => fn ($object, $format, $context) => $object->getId(),
+        ]);
+
+        $token
             ->setToken($jwt)
             ->setUser($user)
             ->setExpiredAt($date)
         ;
 
-        $em->persist($token);
-        $em->flush();
+        $errors = $this->errorService->getMessages($token, $this->validator);
 
-        return new JsonResponse(['token' => $token->getToken()]);
+        if (!$errors) {
+            $em->persist($token);
+            $em->flush();
+            $json = $serializer->serialize($token, 'json');
+
+            return JsonResponse::fromJsonString($json);
+        }
+
+        return new JsonResponse($errors);
     }
 
     /**

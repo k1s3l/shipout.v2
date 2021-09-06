@@ -4,12 +4,16 @@ namespace App\Entity;
 
 use App\Repository\TokensRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
+ * @ORM\HasLifecycleCallbacks()
  * @ORM\Entity(repositoryClass=TokensRepository::class)
  */
 class Tokens
 {
+    use Timestamps;
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -32,6 +36,25 @@ class Tokens
      * @ORM\Column(type="string", length=255)
      */
     private $token;
+
+    /**
+     * @Assert\NotBlank()
+     * @Assert\Ip(message="Введите валидный ip-адрес")
+     * @ORM\Column(type="string", length=255)
+     */
+    private $ip;
+
+    /**
+     * @Assert\NotBlank()
+     * @ORM\Column(type="string", length=255)
+     */
+    private $os;
+
+    /**
+     * @Assert\NotBlank()
+     * @ORM\Column(type="string", length=255)
+     */
+    private $device;
 
     public function getId(): ?int
     {
@@ -70,6 +93,42 @@ class Tokens
     public function setToken(string $token): self
     {
         $this->token = $token;
+
+        return $this;
+    }
+
+    public function getIp(): ?string
+    {
+        return $this->ip;
+    }
+
+    public function setIp(string $ip): self
+    {
+        $this->ip = $ip;
+
+        return $this;
+    }
+
+    public function getOs(): ?string
+    {
+        return $this->os;
+    }
+
+    public function setOs(string $os): self
+    {
+        $this->os = $os;
+
+        return $this;
+    }
+
+    public function getDevice(): ?string
+    {
+        return $this->device;
+    }
+
+    public function setDevice(string $device): self
+    {
+        $this->device = $device;
 
         return $this;
     }
