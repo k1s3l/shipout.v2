@@ -4,12 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Tokens;
 use App\Entity\User;
-use App\Form\RegisterType;
 use App\Repository\TokensRepository;
 use App\Repository\UserRepository;
 use App\Serializer\Normalizer\UserNormalizer;
 use App\Services\ErrorService;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Firebase\JWT\JWT;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,13 +17,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
-use Symfony\Component\Serializer\Normalizer\JsonSerializableNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -141,13 +137,18 @@ class UserController extends AbstractController
         $serializer = new Serializer(
             [
                 new DateTimeNormalizer([
-                    DateTimeNormalizer::FORMAT_KEY => 'Y-m-d',
+                    DateTimeNormalizer::FORMAT_KEY => 'Y-m-d H:i:s',
                 ]),
                 new ObjectNormalizer(
                     null,
                     null,
                     null,
                     new ReflectionExtractor(),
+                    null,
+                    null,
+                    [
+                        AbstractNormalizer::IGNORED_ATTRIBUTES => ['user'],
+                    ],
                 ),
                 new GetSetMethodNormalizer(),
                 new ArrayDenormalizer(),
@@ -161,13 +162,13 @@ class UserController extends AbstractController
         $serializer->deserialize($request->getContent(), Tokens::class, 'json', [
             DateTimeNormalizer::FORMAT_KEY => 'Y-m-d H:i:s',
             AbstractNormalizer::OBJECT_TO_POPULATE => $token,
-            AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => fn ($object, $format, $context) => $object->getId(),
         ]);
 
         $token
             ->setToken($jwt)
             ->setUser($user)
             ->setExpiredAt($date)
+            ->setIp($request->getClientIp())
         ;
 
         $errors = $this->errorService->getMessages($token, $this->validator);
