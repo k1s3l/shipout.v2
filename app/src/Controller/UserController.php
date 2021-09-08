@@ -31,11 +31,12 @@ class UserController extends AbstractController
     public $passwordHasher;
     public $errorService;
 
-    public function __construct(ErrorService $errorService, ValidatorInterface $validator, UserPasswordHasherInterface $passwordHasher)
+    public function __construct(ErrorService $errorService, ValidatorInterface $validator, UserPasswordHasherInterface $passwordHasher, TokensRepository $tokenRepository)
     {
         $this->errorService = $errorService;
         $this->validator = $validator;
         $this->passwordHasher = $passwordHasher;
+        $this->tokenRepository = $tokenRepository;
     }
 
     /**
@@ -52,12 +53,12 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route(path="/api/session", name="session_destroy", methods={"delete"})
+     * @Route(path="/api/sessions", name="destroy_session_except_current", methods={"delete"})
      * Destroy all session except current
      */
-    public function destroy(Request $request, TokensRepository $tokenRepository)
+    public function destroy(Request $request)
     {
-        $query = $tokenRepository->createQueryBuilder('t')
+        $query = $this->tokenRepository->createQueryBuilder('t')
             ->delete()
             ->andwhere('t.token != :token')
             ->andwhere('t.user = :user')
@@ -147,7 +148,7 @@ class UserController extends AbstractController
                     null,
                     null,
                     [
-                        AbstractNormalizer::IGNORED_ATTRIBUTES => ['user'],
+                        AbstractNormalizer::IGNORED_ATTRIBUTES => ['user', 'id'],
                     ],
                 ),
                 new GetSetMethodNormalizer(),
@@ -181,7 +182,7 @@ class UserController extends AbstractController
             return JsonResponse::fromJsonString($json);
         }
 
-        return new JsonResponse($errors);
+        return new JsonResponse($errors, 403);
     }
 
     /**
@@ -190,5 +191,26 @@ class UserController extends AbstractController
     public function confirm(Request $request)
     {
         return new JsonResponse(['message' => 'string']);
+    }
+
+    /**
+     * @Route(path="/api/session/{uuid}", name="delete_session", methods={"delete"})
+     */
+    public function destroySession(Request $request, string $uuid)
+    {
+        $session = $this->tokenRepository->createQueryBuilder('t')
+            ->andWhere('t.uuid = :uuid')
+            ->andWhere('t.user = :user')
+            ->setParameter('uuid', $uuid)
+            ->setParameter('user', $request->attributes->get('user')->getId())
+            ->delete()
+        ;
+
+        $result = $session->getQuery()->getResult();
+
+        return new JsonResponse([
+            'success' => true,
+            'count' => $result,
+        ]);
     }
 }

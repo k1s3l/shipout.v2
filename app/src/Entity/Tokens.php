@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\TokensRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -51,10 +52,20 @@ class Tokens
     private $os;
 
     /**
-     * @Assert\NotBlank()
+     * @Assert\NotBlank(message="")
      * @ORM\Column(type="string", length=255)
      */
     private $device;
+
+    /**
+     * @ORM\Column(type="uuid", unique=true)
+     */
+    private $uuid;
+
+    public function __construct()
+    {
+        $this->uuid = Uuid::v4();
+    }
 
     public function getId(): ?int
     {
@@ -132,4 +143,16 @@ class Tokens
 
         return $this;
     }
+
+    public function getUuid()
+    {
+        return $this->uuid->toRfc4122();
+    }
+
+//    public function setUuid(Uuid $uuid): self
+//    {
+//        $this->uuid = $uuid;
+//
+//        return $this;
+//    }
 }

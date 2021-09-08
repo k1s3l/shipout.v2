@@ -13,7 +13,7 @@ security:
 
     firewalls:
         api:
-            pattern: ^/api/(?!sign_up|sign_in)([a-z0-9]+)$
+            pattern: ^/api/(?!sign_up|sign_in)([a-z0-9/-]+)$
             custom_authenticator:
                 - App\Security\TokenAuthenticator
 
