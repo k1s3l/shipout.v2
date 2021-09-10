@@ -79,25 +79,17 @@ class UserController extends AbstractController
     public function signUp(Request $request)
     {
         $user = new User();
+        $params = [null, null, null, new ReflectionExtractor()];
+        $normalizers = [
+            new DateTimeNormalizer([
+                DateTimeNormalizer::FORMAT_KEY => 'Y-m-d',
+            ]),
+            new UserNormalizer(...$params),
+            new GetSetMethodNormalizer(),
+            new ArrayDenormalizer(),
+        ];
 
-        $serializer = new Serializer(
-            [
-                new DateTimeNormalizer([
-                    DateTimeNormalizer::FORMAT_KEY => 'Y-m-d',
-                ]),
-                new UserNormalizer(
-                    null,
-                    null,
-                    null,
-                    new ReflectionExtractor(),
-                ),
-                new GetSetMethodNormalizer(),
-                new ArrayDenormalizer(),
-            ],
-            [
-                new JsonEncoder(),
-            ]
-        );
+        $serializer = new Serializer($normalizers, [new JsonEncoder()]);
 
         $serializer->deserialize($request->getContent(), User::class, 'json', [
             DateTimeNormalizer::FORMAT_KEY => 'Y-m-d',
@@ -135,29 +127,15 @@ class UserController extends AbstractController
         ];
         $jwt = JWT::encode($payload, 'HS256');
 
-        $serializer = new Serializer(
-            [
-                new DateTimeNormalizer([
-                    DateTimeNormalizer::FORMAT_KEY => 'Y-m-d H:i:s',
-                ]),
-                new ObjectNormalizer(
-                    null,
-                    null,
-                    null,
-                    new ReflectionExtractor(),
-                    null,
-                    null,
-                    [
-                        AbstractNormalizer::IGNORED_ATTRIBUTES => ['user', 'id'],
-                    ],
-                ),
-                new GetSetMethodNormalizer(),
-                new ArrayDenormalizer(),
-            ],
-            [
-                new JsonEncoder(),
-            ]
-        );
+        $params = [null, null, null, new ReflectionExtractor(), null, null, [AbstractNormalizer::IGNORED_ATTRIBUTES => ['user', 'id']]];
+        $normalizers = [
+            new DateTimeNormalizer([DateTimeNormalizer::FORMAT_KEY => 'Y-m-d H:i:s']),
+            new ObjectNormalizer(...$params),
+            new GetSetMethodNormalizer(),
+            new ArrayDenormalizer(),
+        ];
+
+        $serializer = new Serializer($normalizers, [new JsonEncoder()]);
 
         $token = new Tokens();
         $serializer->deserialize($request->getContent(), Tokens::class, 'json', [
