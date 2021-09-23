@@ -129,7 +129,7 @@ class UserController extends AbstractController
 
         $params = [null, null, null, new ReflectionExtractor(), null, null, [AbstractNormalizer::IGNORED_ATTRIBUTES => ['user', 'id']]];
         $normalizers = [
-            new DateTimeNormalizer([DateTimeNormalizer::FORMAT_KEY => 'Y-m-d H:i:s']),
+            new DateTimeNormalizer([DateTimeNormalizer::FORMAT_KEY => 'Y-m-d\TH:i:sP']),
             new ObjectNormalizer(...$params),
             new GetSetMethodNormalizer(),
             new ArrayDenormalizer(),
@@ -139,7 +139,7 @@ class UserController extends AbstractController
 
         $token = new Tokens();
         $serializer->deserialize($request->getContent(), Tokens::class, 'json', [
-            DateTimeNormalizer::FORMAT_KEY => 'Y-m-d H:i:s',
+            DateTimeNormalizer::FORMAT_KEY => 'Y-m-d\TH:i:sP',
             AbstractNormalizer::OBJECT_TO_POPULATE => $token,
         ]);
 
