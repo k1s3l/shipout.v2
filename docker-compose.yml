@@ -14,16 +14,16 @@ services:
     ports:
       - '9000:9000'
 
-  node:
-    restart: always
-    build:
-      context: .
-      dockerfile: ./conf/node/Dockerfile
-    volumes:
-      - ./logs/node:/var/log/node
-      - ./node:/usr/src/app
-    ports:
-      - '5858:5858'
+#  node:
+#    restart: always
+#    build:
+#      context: .
+#      dockerfile: ./conf/node/Dockerfile
+#    volumes:
+#      - ./logs/node:/var/log/node
+#      - ./node:/usr/src/app
+#    ports:
+#      - '5858:5858'
 
   nginx:
     image: nginx:1.19

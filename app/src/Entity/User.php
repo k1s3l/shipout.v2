@@ -3,13 +3,25 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\HasLifecycleCallbacks()
  * @ORM\Entity(repositoryClass=UserRepository::class)
+ * @UniqueEntity(
+ *     "username",
+ *     message="Значения {{ value }} должно быть уникальным"
+ * )
+ * @UniqueEntity(
+ *     "email",
+ *     message="Значения {{ value }} должно быть уникальным"
+ * )
  * @ORM\Table(name="`user`")
  */
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -24,11 +36,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $id;
 
     /**
+     * @Assert\NotBlank(message="Обязательное значение")
+     * @Assert\Regex(
+     *     pattern="/^[A-Za-z0-9_-]+$/",
+     *     message="Значение невалидно. Разрешенные диапазоны символов [A-Z], [a-z], [0-9], [_-]"
+     * )
+     * @Assert\Length(
+     *     min=5,
+     *     max=12,
+     *     minMessage="Минимальная длина никнейма 5 символов",
+     *     maxMessage="Максимльная длина никнейма 12 символов"
+     * )
      * @ORM\Column(type="string", length=255)
      */
     private $username;
 
     /**
+     * @Assert\NotBlank(message="Обязательное значение")
+     * @Assert\Email(
+     *     message = "{{ value }} имеет невалидный формат",
+     * )
      * @ORM\Column(type="string", length=255)
      */
     private $email;
@@ -36,7 +63,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @ORM\Column(type="boolean", options={"default":0})
      */
-    private $is_verified;
+    private $is_verified = false;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -54,16 +81,37 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $middle_name;
 
     /**
+     * @Assert\NotBlank(message="Обязательное значение")
+     * @Assert\LessThanOrEqual("-16 years", message="Регистрация доступна от 16 лет")
      * @ORM\Column(type="date")
      */
-    private $date_of_birth;
+    private ?\DateTimeInterface $date_of_birth;
 
     /**
      * @ORM\Column(type="boolean", options={"default":0})
      */
-    private $is_deleted;
+    private $is_deleted = false;
 
     /**
+     * @Assert\NotBlank(message="Обязательное значение")
+     * @Assert\Length(
+     *     min=8,
+     *     max=64,
+     *     minMessage="Минимальная длина пароля 8 символов",
+     *     maxMessage="Превышена максимальная длина пароля в 64 символа"
+     * )
+     * @Assert\Regex(
+     *     pattern="/[A-ZА-Я]+/",
+     *     message="Пароль должен содержать хотя бы одну прописную букву"
+     * )
+     * @Assert\Regex(
+     *     pattern="/[a-zа-я]+/",
+     *     message="Пароль должен содержать хотя бы одну строчную букву"
+     * )
+     * @Assert\Regex(
+     *     pattern="/[0-9]+/",
+     *     message="Пароль должен содержать хотя бы одну цифру"
+     * )
      * @ORM\Column(type="string", length=255)
      */
     private $password;
@@ -72,6 +120,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @ORM\Column(type="json")
      */
     private $roles = [];
+
+    /**
+     * @ORM\OneToMany(targetEntity=Tokens::class, mappedBy="user", orphanRemoval=true)
+     */
+    private $tokens;
+
+    public function __construct()
+    {
+        $this->tokens = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -150,6 +208,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getFullName(): ?string
+    {
+        $fullName = array_filter([
+            $this->first_name,
+            $this->last_name,
+            $this->middle_name,
+        ]);
+
+        return implode(' ', $fullName);
+    }
+
     public function getDateOfBirth(): ?\DateTimeInterface
     {
         return $this->date_of_birth;
@@ -212,6 +281,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRoles(array $roles): self
     {
         $this->roles = $roles;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Tokens[]
+     */
+    public function getTokens(): Collection
+    {
+        return $this->tokens;
+    }
+
+    public function addToken(Tokens $token): self
+    {
+        if (!$this->tokens->contains($token)) {
+            $this->tokens[] = $token;
+            $token->setUserId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeToken(Tokens $token): self
+    {
+        if ($this->tokens->removeElement($token)) {
+            // set the owning side to null (unless already changed)
+            if ($token->getUserId() === $this) {
+                $token->setUserId(null);
+            }
+        }
 
         return $this;
     }

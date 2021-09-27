@@ -27,8 +27,8 @@ trait Timestamps
      */
     public function setCreatedAt(): self
     {
-        $this->created_at = new \DateTime();
-        $this->updated_at = new \DateTime();
+        $this->created_at = new \DateTimeImmutable();
+        $this->updated_at = new \DateTimeImmutable();
 
         return $this;
     }
@@ -43,7 +43,7 @@ trait Timestamps
      */
     public function setUpdatedAt(): self
     {
-        $this->updated_at = new \DateTime();
+        $this->updated_at = new \DateTimeImmutable();
 
         return $this;
     }

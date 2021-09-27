@@ -1,7 +1,7 @@
 CURRENT_UID := $(shell id -u)
 update = false
 
-.PHONY: build up down restart test php node postgres composerUpdate meigrate
+.PHONY: build up down restart test php node postgres composerUpdate migrate test
 
 build:
 	docker-compose build --build-arg UID=$(CURRENT_UID)
